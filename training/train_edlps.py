@@ -87,9 +87,9 @@ def main():
 
             epoch_l1 += loss_1.item()
             epoch_l2 += loss_2.item()
-            ph += [dataset.decode_cap(p) for p in phrase]
-            pph += [dataset.decode_cap(p) for p in para_phrase]
-            gpph += [dataset.decode_cap(p) for p in torch.argmax(out, dim=-1).t()]
+            ph += [dataset.decode_caption(p) for p in phrase]
+            pph += [dataset.decode_caption(p) for p in para_phrase]
+            gpph += [dataset.decode_caption(p) for p in torch.argmax(out, dim=-1).t()]
 
             itr += 1
             torch.cuda.empty_cache()
@@ -130,9 +130,9 @@ def main():
 
                 epoch_l1 += loss_1.item()
                 epoch_l2 += loss_2.item()
-                ph += [dataset.decode_cap(p) for p in phrase]
-                pph += [dataset.decode_cap(p) for p in para_phrase]
-                gpph += [dataset.decode_cap(p) for p in torch.argmax(out, dim=-1).t()]
+                ph += [dataset.decode_caption(p) for p in phrase]
+                pph += [dataset.decode_caption(p) for p in para_phrase]
+                gpph += [dataset.decode_caption(p) for p in torch.argmax(out, dim=-1).t()]
 
                 itr += 1
                 torch.cuda.empty_cache()
