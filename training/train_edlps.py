@@ -73,11 +73,7 @@ def main():
             phrase = phrase.to(DEVICE)
             para_phrase = para_phrase.to(DEVICE)
 
-            out, enc_out, enc_sim_phrase = pgen(
-                phrase.t(),
-                sim_phrase=para_phrase.t(),
-                train=True,
-            )
+            out, enc_out, enc_sim_phrase = pgen(phrase.t(), sim_phrase=para_phrase.t(), train=True)
 
             loss_1 = cross_entropy_loss(out.permute(1, 2, 0), para_phrase)
             loss_2 = net_utils.JointEmbeddingLoss(enc_out, enc_sim_phrase)
@@ -91,9 +87,9 @@ def main():
 
             epoch_l1 += loss_1.item()
             epoch_l2 += loss_2.item()
-            ph += net_utils.decode_sequence(data.ix_to_word, phrase)
-            pph += net_utils.decode_sequence(data.ix_to_word, para_phrase)
-            gpph += net_utils.decode_sequence(data.ix_to_word, torch.argmax(out, dim=-1).t())
+            ph += [dataset.decode_cap(p) for p in phrase]
+            pph += [dataset.decode_cap(p) for p in para_phrase]
+            gpph += [dataset.decode_cap(p) for p in torch.argmax(out, dim=-1).t()]
 
             itr += 1
             torch.cuda.empty_cache()
@@ -134,9 +130,9 @@ def main():
 
                 epoch_l1 += loss_1.item()
                 epoch_l2 += loss_2.item()
-                ph += net_utils.decode_sequence(data.ix_to_word, phrase)
-                pph += net_utils.decode_sequence(data.ix_to_word, para_phrase)
-                gpph += net_utils.decode_sequence(data.ix_to_word, torch.argmax(out, dim=-1).t())
+                ph += [dataset.decode_cap(p) for p in phrase]
+                pph += [dataset.decode_cap(p) for p in para_phrase]
+                gpph += [dataset.decode_cap(p) for p in torch.argmax(out, dim=-1).t()]
 
                 itr += 1
                 torch.cuda.empty_cache()
@@ -165,6 +161,6 @@ if __name__ == "__main__":
     GEN_DIR = 'samples'
     HOME = './'
     TIME = time.strftime("%Y%m%d_%H%M%S")
-    DEVICE = torch.device(
-        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+    DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print('running on', DEVICE)
     main()
