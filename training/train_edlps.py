@@ -25,8 +25,8 @@ def main():
     # build model
 
     # # get data
-    dataset, train_loader = get_cub_200_2011_paraphrase_combined_vocab(split='train_val', d_batch=args.batch_size)
-    _, test_loader = get_cub_200_2011_paraphrase_combined_vocab(split='test', d_batch=args.batch_size)
+    dataset, train_loader = get_cub_200_2011_paraphrase_combined_vocab(split='train_val', should_pad=True, pad_to_length=21, d_batch=args.batch_size)
+    _, test_loader = get_cub_200_2011_paraphrase_combined_vocab(split='test', should_pad=True, pad_to_length=21, d_batch=args.batch_size)
 
     # # make op
     op = {
