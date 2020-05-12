@@ -13,7 +13,7 @@ from misc import net_utils, utils
 from misc.dataloader import Dataloader
 from misc.train_util import dump_samples, evaluate_scores, save_model
 from models.enc_dec_sh_dis import ParaphraseGenerator
-
+from paraphrase import get_cub_200_2011_paraphrase_combined_vocab
 
 def main():
 
@@ -25,12 +25,13 @@ def main():
     # build model
 
     # # get data
-    data = Dataloader(args.input_json, args.input_ques_h5)
+    dataset, train_loader = get_cub_200_2011_paraphrase_combined_vocab(split='train_val', d_batch=args.batch_size)
+    _, test_loader = get_cub_200_2011_paraphrase_combined_vocab(split='test', d_batch=args.batch_size)
 
     # # make op
     op = {
-        "vocab_sz": data.getVocabSize(),
-        "max_seq_len": data.getSeqLength(),
+        "vocab_sz": dataset.d_vocab,
+        "max_seq_len": dataset.pad_to_length,
         "emb_hid_dim": args.emb_hid_dim,
         "emb_dim": args.emb_dim,
         "enc_dim": args.enc_dim,
@@ -50,19 +51,6 @@ def main():
     subprocess.run(['mkdir', os.path.join(GEN_DIR, TIME), os.path.join(SAVE_DIR, TIME)], check=False)
 
     # ready model for training
-
-    train_loader = Data.DataLoader(
-        Data.Subset(data, range(args.train_dataset_len)),
-        batch_size=args.batch_size,
-        shuffle=True,
-    )
-    test_loader = Data.DataLoader(Data.Subset(
-        data,
-        range(args.train_dataset_len,
-              args.train_dataset_len + args.val_dataset_len)),
-                                  batch_size=args.batch_size,
-                                  shuffle=True)
-
     pgen_optim = optim.RMSprop(pgen.parameters(), lr=op["lr"])
     pgen.train()
 
@@ -80,8 +68,7 @@ def main():
         gpph = []
         pgen.train()
 
-        for phrase, phrase_len, para_phrase, para_phrase_len, _ in tqdm(
-                train_loader, ascii=True, desc="epoch" + str(epoch)):
+        for phrase, phrase_len, para_phrase, para_phrase_len in tqdm(train_loader, ascii=True, desc="epoch" + str(epoch)):
 
             phrase = phrase.to(DEVICE)
             para_phrase = para_phrase.to(DEVICE)
@@ -106,8 +93,7 @@ def main():
             epoch_l2 += loss_2.item()
             ph += net_utils.decode_sequence(data.ix_to_word, phrase)
             pph += net_utils.decode_sequence(data.ix_to_word, para_phrase)
-            gpph += net_utils.decode_sequence(data.ix_to_word,
-                                              torch.argmax(out, dim=-1).t())
+            gpph += net_utils.decode_sequence(data.ix_to_word, torch.argmax(out, dim=-1).t())
 
             itr += 1
             torch.cuda.empty_cache()
@@ -136,14 +122,12 @@ def main():
         pgen.eval()
 
         with torch.no_grad():
-            for phrase, phrase_len, para_phrase, para_phrase_len, _ in tqdm(
-                    test_loader, ascii=True, desc="val" + str(epoch)):
+            for phrase, phrase_len, para_phrase, para_phrase_len in tqdm(test_loader, ascii=True, desc="val" + str(epoch)):
 
                 phrase = phrase.to(DEVICE)
                 para_phrase = para_phrase.to(DEVICE)
 
-                out, enc_out, enc_sim_phrase = pgen(phrase.t(),
-                                                    sim_phrase=para_phrase.t())
+                out, enc_out, enc_sim_phrase = pgen(phrase.t(), sim_phrase=para_phrase.t())
 
                 loss_1 = cross_entropy_loss(out.permute(1, 2, 0), para_phrase)
                 loss_2 = net_utils.JointEmbeddingLoss(enc_out, enc_sim_phrase)
@@ -152,9 +136,7 @@ def main():
                 epoch_l2 += loss_2.item()
                 ph += net_utils.decode_sequence(data.ix_to_word, phrase)
                 pph += net_utils.decode_sequence(data.ix_to_word, para_phrase)
-                gpph += net_utils.decode_sequence(
-                    data.ix_to_word,
-                    torch.argmax(out, dim=-1).t())
+                gpph += net_utils.decode_sequence(data.ix_to_word, torch.argmax(out, dim=-1).t())
 
                 itr += 1
                 torch.cuda.empty_cache()
@@ -167,9 +149,7 @@ def main():
             for key in scores:
                 logger.add_scalar(key + "_val", scores[key], epoch)
 
-            dump_samples(ph, pph, gpph,
-                         os.path.join(GEN_DIR, TIME,
-                                      str(epoch) + "_val.txt"))
+            dump_samples(ph, pph, gpph, os.path.join(GEN_DIR, TIME, str(epoch) + "_val.txt"))
 
         save_model(pgen, pgen_optim, epoch, os.path.join(SAVE_DIR, TIME, str(epoch)))
 
