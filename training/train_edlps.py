@@ -56,7 +56,7 @@ def main():
 
     # train model
     pgen = pgen.to(DEVICE)
-    cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=data.PAD_token)
+    cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=dataset.pad_token)
 
     for epoch in range(op["epochs"]):
 
