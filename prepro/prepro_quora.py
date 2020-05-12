@@ -11,8 +11,6 @@ import os.path
 import argparse
 import glob
 import numpy as np
-from scipy.misc import imread, imresize
-import scipy.io
 import pdb
 import string
 import h5py
@@ -74,15 +72,15 @@ def build_vocab_question(imgs5, params):#imgs1,imgs2,imgs3,imgs4,imgs5,imgs6,img
         for w in img['processed_tokens']:
             counts[w] = counts.get(w, 0) + 1
 
-    cw = sorted([(count,w) for w,count in counts.iteritems()], reverse=True)
+    cw = sorted([(count,w) for w,count in counts.items()], reverse=True)
     print ('top words and their counts:')
     print ('\n'.join(map(str,cw[:20])))
 
     # print some stats
-    total_words = sum(counts.itervalues())
+    total_words = sum(counts.values())
     print ('total words:', total_words)
-    bad_words = [w for w,n in counts.iteritems() if n <= count_thr]
-    vocab = [w for w,n in counts.iteritems() if n > count_thr]   # will incorpate vocab for  both caption and question
+    bad_words = [w for w,n in counts.items() if n <= count_thr]
+    vocab = [w for w,n in counts.items() if n > count_thr]   # will incorpate vocab for  both caption and question
     bad_count = sum(counts[w] for w in bad_words)
     print ('number of bad words: %d/%d = %.2f%%' % (len(bad_words), len(counts), len(bad_words)*100.0/len(counts)))
     print ('number of words in vocab would be %d' % (len(vocab), ))
