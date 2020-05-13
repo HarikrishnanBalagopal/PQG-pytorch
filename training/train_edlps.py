@@ -25,8 +25,9 @@ def main():
     # build model
 
     # # get data
-    dataset, train_loader = get_cub_200_2011_paraphrase_combined_vocab(split='train_val', should_pad=True, pad_to_length=21, d_batch=args.batch_size)
-    _, test_loader = get_cub_200_2011_paraphrase_combined_vocab(split='test', should_pad=True, pad_to_length=21, d_batch=args.batch_size)
+    print('no_start_end:', args.no_start_end)
+    dataset, train_loader = get_cub_200_2011_paraphrase_combined_vocab(split='train_val', no_start_end=args.no_start_end, should_pad=True, pad_to_length=21, d_batch=args.batch_size)
+    _, test_loader = get_cub_200_2011_paraphrase_combined_vocab(split='test', no_start_end=args.no_start_end, should_pad=True, pad_to_length=21, d_batch=args.batch_size)
 
     # # make op
     op = {
@@ -152,7 +153,6 @@ def main():
     # wrap ups
     logger.close()
     print("Done !!")
-
 
 if __name__ == "__main__":
 
