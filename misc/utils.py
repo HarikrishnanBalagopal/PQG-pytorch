@@ -24,7 +24,7 @@ def make_parser():
     parser.add_argument('--rnn_layers',type=int, default=1, help='number of the rnn layer')
     parser.add_argument('--train_dataset_len', type=int, default=100000, help='length of train dataset')
     parser.add_argument('--val_dataset_len', type=int, default=30000, help='length of validation dataset')
-    parser.add_argument('--no_start_end', type=bool, default=False, action='store_true', help='include start and end tokens in sentences')
+    parser.add_argument('--no_start_end', default=False, action='store_true', help='include start and end tokens in sentences')
 
     # Optimization
     parser.add_argument('--optim',default='rmsprop',help='what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
