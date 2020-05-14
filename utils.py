@@ -12,10 +12,10 @@ from torchvision import transforms
 from torchvision.models import inception_v3
 from torch.utils.data import Dataset, DataLoader
 
-DATASETS_PATH = '/gdrive/My Drive/datasets/'
+DATASETS_PATH = '/kaggle/input/'
 
 # CUB_200_2011
-CUB_200_2011_PATH = os.path.join(DATASETS_PATH, 'cub_200_2011')
+CUB_200_2011_PATH = os.path.join(DATASETS_PATH, 'cub-200-2011')
 # Captions and metadata
 CUB_200_2011_METADATA_PATH           = os.path.join(CUB_200_2011_PATH, 'metadata.pth')
 CUB_200_2011_IMG_ID_TO_CAPS_PATH     = os.path.join(CUB_200_2011_PATH, 'cub_200_2011_img_id_to_caps.pth')
@@ -36,7 +36,8 @@ CUB_200_2011_GLOVE_PATH = os.path.join(CUB_200_2011_PATH, 'glove_relevant_embedd
 CUB_200_2011_D_VOCAB = 1750
 
 # OXFORD_FLOWERS_102
-OXFORD_FLOWERS_102_PATH = os.path.join(DATASETS_PATH, 'oxford_flowers_102')
+OXFORD_FLOWERS_102_PATH = os.path.join(DATASETS_PATH, 'oxford-flowers-102')
+OXFORD_FLOWERS_102_IMG_ID_TO_CAPS_PATH     = os.path.join(OXFORD_FLOWERS_102_PATH, 'oxford_flowers_102_img_id_to_caps.pth')
 # Captions and metadata
 OXFORD_FLOWERS_102_METADATA_PATH           = os.path.join(OXFORD_FLOWERS_102_PATH, 'metadata.pth')
 # All images
@@ -53,16 +54,30 @@ OXFORD_FLOWERS_102_TEST_IMGS_128_PATH      = os.path.join(OXFORD_FLOWERS_102_PAT
 OXFORD_FLOWERS_102_TEST_IMGS_256_PATH      = os.path.join(OXFORD_FLOWERS_102_PATH, 'imgs_test_256x256.pth')
 
 # EMNLP_2017_NEWS
-EMNLP_2017_NEWS_PATH = os.path.join(DATASETS_PATH, 'emnlp_2017_news')
+EMNLP_2017_NEWS_PATH = os.path.join(DATASETS_PATH, 'emnlp-2017-news')
 EMNLP_2017_NEWS_DATA_PATH = os.path.join(EMNLP_2017_NEWS_PATH, 'data.pth')
+# EMNLP 2017 NEWS RAW
+EMNLP_2017_NEWS_RAW_TRAIN_PATH = os.path.join(EMNLP_2017_NEWS_PATH, 'emnlp_train_set.pth')
+EMNLP_2017_NEWS_RAW_VALID_PATH = os.path.join(EMNLP_2017_NEWS_PATH, 'emnlp_valid_set.pth')
+EMNLP_2017_NEWS_RAW_TEST_PATH  = os.path.join(EMNLP_2017_NEWS_PATH, 'emnlp_test_set.pth')
+
+# WIKITEXT 103
+WIKITEXT_103_PATH = os.path.join(DATASETS_PATH, 'wikitext_103')
+WIKITEXT_103_RAW_TRAIN_PATH = os.path.join(WIKITEXT_103_PATH, 'wikitext_train_set.pth')
+WIKITEXT_103_RAW_VALID_PATH = os.path.join(WIKITEXT_103_PATH, 'wikitext_valid_set.pth')
+WIKITEXT_103_RAW_TEST_PATH  = os.path.join(WIKITEXT_103_PATH, 'wikitext_test_set.pth')
 
 # GLOVE 300 DIM EMBEDDINGS OF 5102 WORDS (from scratchgan paper)
-GLOVE_5102_300_PATH = os.path.join(DATASETS_PATH, 'glove_5102_300.pth')
+GLOVE_5102_300_PATH = os.path.join(DATASETS_PATH, 'glove-300-dimensional-embeddings-for-5102-words', 'glove_5102_300.pth')
 
 # CUB 200 2011, OXFORD FLOWERS 102, EMNLP 2017 AND WIKITEXT 103 COMBINED VOCAB
 COMBINED_WORD_FREQ_PATH = os.path.join(DATASETS_PATH, 'cub_oxford_emnlp_wikitext_word_freqs.pth')
-WORD_ID_TO_WORD_5K_PATH = os.path.join(DATASETS_PATH, 'word_id_to_word_5k.pth')
-WORD_ID_TO_WORD_10K_PATH = os.path.join(DATASETS_PATH, 'word_id_to_word_10k.pth')
+WORD_ID_TO_WORD_5K_PATH = os.path.join(DATASETS_PATH, 'combined-vocab', 'word_id_to_word_5k.pth')
+WORD_ID_TO_WORD_10K_PATH = os.path.join(DATASETS_PATH, 'combined-vocab', 'word_id_to_word_10k.pth')
+
+# QUORA PARAPHRASE DATASET
+QUORA_PARAPHRASE_PATH = os.path.join(DATASETS_PATH, 'quora-paraphrase')
+QUORA_PARAPHRASE_DATA_PATH = os.path.join(QUORA_PARAPHRASE_PATH, 'quora_paraphrase.pth')
 
 class CUB_200_2011(Dataset):
     """If should_pad is True, need to also provide a pad_to_length. Padding also adds <START> and <END> tokens to captions."""
@@ -674,8 +689,9 @@ class DAMSMImageEncoder(nn.Module):
 def test_damsm_image_encoder():
     d_batch = 4
     d_image_size = 64
-    img_enc = DAMSMImageEncoder().cuda().train()
-    imgs = torch.randn(d_batch, 3, d_image_size, d_image_size).cuda()
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    img_enc = DAMSMImageEncoder().to(device).train()
+    imgs = torch.randn(d_batch, 3, d_image_size, d_image_size).to(device)
 
     img_local_features, img_global_features = img_enc(imgs)
 
@@ -718,8 +734,9 @@ class DAMSMTextEncoder(nn.Module):
 
 def test_damsm_text_encoder():
     d_batch = 4
-    text_enc = DAMSMTextEncoder().cuda().train()
-    texts = torch.randint(low=0, high=text_enc.d_vocab, size=(d_batch, text_enc.d_max_seq_len)).cuda()
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    text_enc = DAMSMTextEncoder().to(device).train()
+    texts = torch.randint(low=0, high=text_enc.d_vocab, size=(d_batch, text_enc.d_max_seq_len)).to(device)
 
     text_local_features, text_global_features = text_enc(texts)
 
@@ -760,13 +777,13 @@ def test_encoders_and_loss():
 if __name__ == '__main__':
     print('Running tests for CUB 200 2011 dataset:')
     test_get_cub_200_2011()
-    print('Running tests for OxfordFlowers102 dataset:')
-    test_oxford_flowers_102()
+#     print('Running tests for OxfordFlowers102 dataset:')
+#     test_oxford_flowers_102()
     print('Running tests for EMNLP2017 dataset:')
     test_get_emnlp_2017()
     print('Running tests for DAMSM loss and encoders:')
     test_damsm_loss()
-    test_damsm_image_encoder()
+#     test_damsm_image_encoder()
     test_damsm_text_encoder()
-    test_encoders_and_loss()
+#     test_encoders_and_loss()
     print('Done.')
