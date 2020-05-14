@@ -13,7 +13,7 @@ from misc import net_utils, utils
 from misc.dataloader import Dataloader
 from misc.train_util import dump_samples, evaluate_scores, save_model
 from models.enc_dec_sh_dis import ParaphraseGenerator
-from paraphrase import get_cub_200_2011_paraphrase_combined_vocab
+from paraphrase import get_cub_200_2011_paraphrase_combined_vocab, get_quora_paraphrase_dataset_combined_vocab
 
 def main():
 
@@ -25,9 +25,16 @@ def main():
     # build model
 
     # # get data
-    print('no_start_end:', args.no_start_end)
-    dataset, train_loader = get_cub_200_2011_paraphrase_combined_vocab(split='train_val', no_start_end=args.no_start_end, should_pad=True, pad_to_length=21, d_batch=args.batch_size)
-    _, test_loader = get_cub_200_2011_paraphrase_combined_vocab(split='test', no_start_end=args.no_start_end, should_pad=True, pad_to_length=21, d_batch=args.batch_size)
+    if args.dataset_name == 'cub':
+        # length 21 since 75% of captions have length <= 19
+        dataset, train_loader = get_cub_200_2011_paraphrase_combined_vocab(split='train_val', no_start_end=args.no_start_end, should_pad=True, pad_to_length=21, d_batch=args.batch_size)
+        _, test_loader = get_cub_200_2011_paraphrase_combined_vocab(split='test', no_start_end=args.no_start_end, should_pad=True, pad_to_length=21, d_batch=args.batch_size)
+    elif args.dataset_name == 'quora':
+        # length 26 since that was used by the paper authors
+        dataset, train_loader = get_quora_paraphrase_dataset_combined_vocab(split='train', no_start_end=args.no_start_end, should_pad=True, pad_to_length=26, d_batch=args.batch_size)
+        _, test_loader = get_quora_paraphrase_dataset_combined_vocab(split='test', no_start_end=args.no_start_end, should_pad=True, pad_to_length=26, d_batch=args.batch_size)
+    else:
+        raise NotImplementedError
 
     # # make op
     op = {
